@@ -5,7 +5,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,10 +13,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dad.dad.model.Post;
+import dad.dad.repository.DadRepository;
+
 @CrossOrigin(origins = "*")
 @RestController
 public class DadController {
-
+	
+	@Autowired
+	private DadRepository dadRepository;
+	
 	@GetMapping("/post")
 	public JsonNode getPost() throws Exception {
 
@@ -33,18 +39,24 @@ public class DadController {
 
 		String line;
 		while ((line = rd.readLine()) != null) {
-			//output = line.replace("[", " ").replace("]", " ");
 			result.append(line);
 		}
-		rd.close();
-		
-
-		 //JSONObject json = new JSONObject(result.toString());
+		rd.close();		
 
 		ObjectMapper mapper = new ObjectMapper();
+						
 		actualObj = mapper.readTree(result.toString());
-		
+				
 		System.out.println(actualObj);
+		
+		for (int i = 0; i < actualObj.size(); i++) {
+			Post post = new Post();		
+			post.setId(Integer.parseInt(String.valueOf(actualObj.get(i).get("id"))));
+			post.setTitle(String.valueOf(actualObj.get(i).get("title")));
+			post.setBody(String.valueOf(actualObj.get(i).get("body")));
+			post.setUserId(Integer.parseInt(String.valueOf(actualObj.get(i).get("userId"))));			
+			dadRepository.save(post);
+		}
 
 		return actualObj;
 	}
